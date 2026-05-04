@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block content %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <div>
+        <h1 class="text-3xl font-bold text-slate-800">Panel de Control</h1>
+        <p class="text-slate-500">Hoy es {{ dia_hoy }} | Resumen de {{ mes_actual }}</p>
+    </div>
+    
+    <form method="GET" class="flex items-center gap-2 bg-white p-2 rounded-xl shadow-sm border border-slate-200">
+        <input type="month" name="mes" value="{{ mes_actual }}" class="outline-none text-slate-700 font-bold p-1">
+        <button type="submit" class="bg-blue-600 text-white px-4 py-1 rounded-lg hover:bg-blue-700 transition text-sm font-bold">
+            Filtrar
+        </button>
+    </form>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-blue-500">
+        <p class="text-sm text-slate-500 font-bold uppercase">Comisión Quiniela (15%)</p>
+        <h2 class="text-2xl font-black text-slate-800">${{ "{:,.2f}".format(ganancia_quiniela) }}</h2>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-emerald-500">
+        <p class="text-sm text-slate-500 font-bold uppercase">Neto Av. Cba</p>
+        <h2 class="text-2xl font-black text-emerald-600">${{ "{:,.2f}".format(neto_cba) }}</h2>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-purple-500">
+        <p class="text-sm text-slate-500 font-bold uppercase">Neto Los Olmos</p>
+        <h2 class="text-2xl font-black text-purple-600">${{ "{:,.2f}".format(neto_olmos) }}</h2>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-orange-500">
+        <p class="text-sm text-slate-500 font-bold uppercase">Ganancia Total Neta</p>
+        <h2 class="text-2xl font-black text-slate-900">${{ "{:,.2f}".format(ganancia_total) }}</h2>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <h3 class="text-lg font-bold text-slate-700 mb-4">Distribución de Ganancias</h3>
+        <div class="h-64">
+            <canvas id="chartDonut" 
+                data-quiniela="{{ ganancia_quiniela }}" 
+                data-cba="{{ neto_cba }}" 
+                data-olmos="{{ neto_olmos }}">
+            </canvas>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <h3 class="text-lg font-bold text-slate-700 mb-4">Ingresos vs Gastos</h3>
+        <div class="h-64">
+            <canvas id="chartBars" 
+                data-ingresos="{{ ganancia_total + gastos_totales }}" 
+                data-gastos="{{ gastos_totales }}">
+            </canvas>
+        </div>
+    </div>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+        <h3 class="text-xl font-bold text-slate-800">Proveedores con Deuda Pendiente</h3>
+        <span class="bg-red-100 text-red-600 text-xs font-bold px-3 py-1 rounded-full">Atención Urgente</span>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead class="bg-slate-50">
+                <tr>
+                    <th class="p-4 text-slate-600 font-bold">Proveedor</th>
+                    <th class="p-4 text-slate-600 font-bold">Día de Visita</th>
+                    <th class="p-4 text-slate-600 font-bold text-right">Monto a Pagar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in proveedores_deuda %}
+                <tr class="border-b border-slate-50 hover:bg-slate-50 transition">
+                    <td class="p-4 font-bold text-slate-700">{{ p.nombre }}</td>
+                    <td class="p-4 text-slate-500 text-sm italic">{{ p.dia_visita }}</td>
+                    <td class="p-4 text-right">
+                        <span class="text-red-600 font-black text-lg">${{ "{:,.2f}".format(p.deuda) }}</span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="p-8 text-center text-slate-400 italic">No hay deudas pendientes. ¡Excelente!</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Ahora JavaScript lee los datos del HTML de forma limpia y sin generar errores
+    
+    // Gráfico de Torta
+    const canvasDonut = document.getElementById('chartDonut');
+    const dataDonut = {
+        quiniela: parseFloat(canvasDonut.getAttribute('data-quiniela')) || 0,
+        cba: parseFloat(canvasDonut.getAttribute('data-cba')) || 0,
+        olmos: parseFloat(canvasDonut.getAttribute('data-olmos')) || 0
+    };
+
+    new Chart(canvasDonut, {
+        type: 'doughnut',
+        data: {
+            labels: ['Quiniela', 'Av. Cba', 'Los Olmos'],
+            datasets: [{
+                data: [dataDonut.quiniela, dataDonut.cba, dataDonut.olmos],
+                backgroundColor: ['#3b82f6', '#10b981', '#a855f7'],
+                borderWidth: 0
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    // Gráfico de Barras
+    const canvasBars = document.getElementById('chartBars');
+    const dataBars = {
+        ingresos: parseFloat(canvasBars.getAttribute('data-ingresos')) || 0,
+        gastos: parseFloat(canvasBars.getAttribute('data-gastos')) || 0
+    };
+
+    new Chart(canvasBars, {
+        type: 'bar',
+        data: {
+            labels: ['Ingresos', 'Gastos'],
+            datasets: [{
+                label: '$ Monto',
+                data: [dataBars.ingresos, dataBars.gastos],
+                backgroundColor: ['#10b981', '#ef4444'],
+                borderRadius: 10
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+</script>
+
+{% endblock %}

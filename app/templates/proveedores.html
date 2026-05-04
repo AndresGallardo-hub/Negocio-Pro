@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-slate-800">Proveedores</h1>
+    <p class="text-slate-500">Gestioná tus marcas, días de visita y cuentas corrientes.</p>
+</div>
+
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8">
+    <h2 class="text-xl font-bold text-slate-700 mb-4"><i class="fas fa-plus-circle text-blue-500"></i> Agregar Nuevo Proveedor</h2>
+    <form method="POST" action="{{ url_for('proveedores') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <input type="text" name="nombre" placeholder="Nombre (ej. Coca Cola)" required class="border border-slate-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+        <input type="text" name="telefono" placeholder="Teléfono" class="border border-slate-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+        <select name="dia_visita" class="border border-slate-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-slate-700">
+            <option value="Lunes">Lunes</option>
+            <option value="Martes">Martes</option>
+            <option value="Miércoles">Miércoles</option>
+            <option value="Jueves">Jueves</option>
+            <option value="Viernes">Viernes</option>
+            <option value="Sábado">Sábado</option>
+        </select>
+        <input type="number" step="0.01" name="deuda" placeholder="Deuda Inicial ($)" class="border border-slate-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+        <button type="submit" class="md:col-span-4 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition shadow-md">
+            Guardar Proveedor
+        </button>
+    </form>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="p-6 border-b border-slate-100">
+        <h3 class="text-xl font-bold text-slate-800">Listado Activo</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead class="bg-slate-50">
+                <tr>
+                    <th class="p-4 text-slate-600 font-bold">Marca</th>
+                    <th class="p-4 text-slate-600 font-bold">Contacto / Visita</th>
+                    <th class="p-4 text-slate-600 font-bold">Deuda Actual</th>
+                    <th class="p-4 text-slate-600 font-bold text-center">Gestionar Deuda</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in proveedores %}
+                <tr class="border-t border-slate-100 hover:bg-slate-50 transition">
+                    <td class="p-4 font-bold text-slate-800">{{ p.nombre }}</td>
+                    <td class="p-4 text-slate-600">
+                        {{ p.telefono }} <br> 
+                        <span class="text-sm text-slate-400 italic"><i class="fas fa-calendar-day"></i> Pasa los {{ p.dia_visita }}</span>
+                    </td>
+                    <td class="p-4 font-black text-lg {% if p.deuda > 0 %}text-red-600{% else %}text-emerald-600{% endif %}">
+                        ${{ "{:,.2f}".format(p.deuda or 0) }}
+                    </td>
+                    <td class="p-4 text-center">
+                        <form method="POST" action="{{ url_for('actualizar_deuda', id=p.id) }}" class="flex flex-col xl:flex-row items-center justify-center gap-2">
+                            <input type="number" step="0.01" name="monto" placeholder="$ Monto" required class="border border-slate-300 p-1.5 rounded-lg w-28 text-sm outline-none focus:border-blue-500">
+                            <div class="flex gap-1">
+                                <button type="submit" name="accion" value="sumar" class="bg-red-100 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-200 font-bold text-sm transition" title="Sumar mercadería que dejaron fiada">
+                                    + Deuda
+                                </button>
+                                <button type="submit" name="accion" value="restar" class="bg-emerald-100 text-emerald-600 px-3 py-1.5 rounded-lg hover:bg-emerald-200 font-bold text-sm transition" title="Registrar pago realizado">
+                                    - Pago
+                                </button>
+                            </div>
+                        </form>
+                        <div class="mt-3">
+                            <a href="{{ url_for('eliminar_proveedor', id=p.id) }}" class="text-slate-400 hover:text-red-600 text-xs font-bold transition">
+                                <i class="fas fa-trash"></i> Eliminar Marca
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="p-8 text-center text-slate-500 italic">
+                        No hay proveedores cargados todavía. Agregá el primero arriba.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

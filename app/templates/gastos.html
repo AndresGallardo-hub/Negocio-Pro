@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold text-slate-800">Gastos Extraordinarios</h1>
+    <p class="text-slate-500">Registrá las compras de urgencia por sucursal.</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
+        <h2 class="text-xl font-bold mb-4 text-slate-700">Cargar Gasto</h2>
+        <form method="POST" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-600">Sucursal</label>
+                <select name="sucursal" required class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="Av. Cba">Despensa Marce - Av. Cba</option>
+                    <option value="Los Olmos">Despensa Marce - Los Olmos</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-600">Descripción (Ej: Faltante Fiambre)</label>
+                <input type="text" name="descripcion" required class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-600">Monto Gastado ($)</label>
+                <input type="number" step="0.01" name="monto" required class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <button type="submit" class="w-full bg-red-600 text-white py-2 rounded-lg font-bold hover:bg-red-700 transition">Registrar Gasto</button>
+        </form>
+    </div>
+
+    <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <table class="w-full text-left">
+            <thead class="bg-slate-50 border-b border-slate-200">
+                <tr>
+                    <th class="p-4 font-bold text-slate-600">Fecha</th>
+                    <th class="p-4 font-bold text-slate-600">Sucursal</th>
+                    <th class="p-4 font-bold text-slate-600">Detalle</th>
+                    <th class="p-4 font-bold text-slate-600">Monto</th>
+                    <th class="p-4 font-bold text-slate-600 text-center">Borrar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for g in gastos %}
+                <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                    <td class="p-4 text-slate-600">{{ g.fecha.strftime('%d/%m/%Y') }}</td>
+                    <td class="p-4"><span class="px-2 py-1 bg-slate-200 text-slate-700 rounded-md text-xs font-bold">{{ g.sucursal }}</span></td>
+                    <td class="p-4 font-semibold text-slate-700">{{ g.descripcion }}</td>
+                    <td class="p-4 font-black text-red-500">${{ "{:,.2f}".format(g.monto) }}</td>
+                    <td class="p-4 text-center">
+                        <a href="{{ url_for('eliminar_gasto', id=g.id) }}" class="text-slate-300 hover:text-red-500 transition" onclick="return confirm('¿Seguro querés eliminar este gasto?')">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
